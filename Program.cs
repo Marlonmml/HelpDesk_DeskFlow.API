@@ -1,3 +1,7 @@
+using DeskFlow.API.Data;
+using DeskFlow.API.Services;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
