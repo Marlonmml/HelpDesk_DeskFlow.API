@@ -58,4 +58,56 @@ public class ChamadoService : IChamadoService
 
         return chamado;
     }
+     public async Task<Chamados> BuscarPorIdAsync(int id)
+    {
+        var chamado = await _context.Chamados
+            .Include(c => c.Categoria)
+            .Include(c => c.Interacoes)
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (chamado is null)
+            throw new KeyNotFoundException("Chamado não encontrado");
+
+        return chamado;
+    }
+    public async Task<Interacao> AdicionarInteracaoAsync(int chamadoId, string autor, string mensagem)
+        {
+            var chamado = await _context.Chamados.FirstOrDefaultAsync(c => c.Id == chamadoId);
+            if (chamado is null)
+            throw new KeyNotFoundException("Chamado não encontrado");
+
+            if (chamado.Status == StatusChamado.Finalizado) 
+            throw new InvalidOperationException("Não é possível adicionar interações em um chamado fechado");
+
+            var interacao = new Interacao
+        {
+            ChamadoId = chamadoId,
+            Autor = autor,
+            Mensagem = mensagem,
+            DataRegistro = DateTime.Now
+        };
+
+        _context.Interacoes.Add(interacao);
+        await _context.SaveChangesAsync();
+
+    return interacao;
+    }
+    public async Task<List<Chamados>> ListarAsync(StatusChamado? status, string prioridade, int? categoriaId)
+    {
+        var query = _context.Chamados
+            .Include(c => c.Categoria)
+            .AsQueryable();
+
+        if (status.HasValue)
+            query = query.Where(c => c.Status == status.Value);
+
+        if (!string.IsNullOrWhiteSpace(prioridade))
+            query = query.Where(c => c.Prioridade == prioridade);
+
+        if (categoriaId.HasValue)
+            query = query.Where(c => c.CategoriaId == categoriaId.Value);
+
+        return await query.ToListAsync();
+    }
+
 }

@@ -7,4 +7,5 @@ public class Interacao
     public string Autor { get; set; }
     public string Mensagem { get; set; }
     public DateTime DataRegistro { get; set; }
+    public Chamados Chamado { get; set; }
 }

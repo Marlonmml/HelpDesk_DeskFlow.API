@@ -13,4 +13,5 @@ public class Chamados
     public string Solucao { get; set; }
     public int CategoriaId { get; set; } 
     public Categorias Categoria { get; set; }
+    public ICollection<Interacao> Interacoes { get; set; } = new List<Interacao>();
 }

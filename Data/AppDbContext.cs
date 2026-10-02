@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
 
     public DbSet<Chamados> Chamados { get; set; }
     public DbSet<Categorias> Categorias { get; set; }
+    public DbSet<Interacao> Interacoes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -18,5 +19,10 @@ public class AppDbContext : DbContext
             .HasMany(c => c.Chamados)
             .WithOne(ch => ch.Categoria)
             .HasForeignKey(ch => ch.CategoriaId);
+        
+        modelBuilder.Entity<Chamados>() 
+            .HasMany(ch => ch.Interacoes)
+            .WithOne(i => i.Chamado)
+            .HasForeignKey(i => i.ChamadoId);
     }
 }
