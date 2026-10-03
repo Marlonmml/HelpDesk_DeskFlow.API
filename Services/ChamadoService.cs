@@ -1,21 +1,26 @@
-using DeskFlow.API.Models;           
-using DeskFlow.API.Models.Entities; 
-using DeskFlow.API.Data;
-using Microsoft.EntityFrameworkCore;
+using DeskFlow.API.Models;
+using DeskFlow.API.Models.Entities;
+using DeskFlow.API.Repositories;
 
 namespace DeskFlow.API.Services;
 
 public class ChamadoService : IChamadoService
 {
-    private readonly AppDbContext _context;
+    private readonly IChamadoRepository _chamadoRepository;
+    private readonly ICategoriaRepository _categoriaRepository;
 
-    public ChamadoService(AppDbContext context)
+    public ChamadoService(IChamadoRepository chamadoRepository, ICategoriaRepository categoriaRepository)
     {
-        _context = context;
+        _chamadoRepository = chamadoRepository;
+        _categoriaRepository = categoriaRepository;
     }
 
     public async Task<Chamados> CriarAsync(Chamados chamado)
     {
+        var categoriaExiste = await _categoriaRepository.ObterPorIdAsync(chamado.CategoriaId);
+        if (categoriaExiste is null)
+            throw new InvalidOperationException("Categoria informada não existe");
+
         var novoChamado = new Chamados
         {
             Titulo = chamado.Titulo,
@@ -27,59 +32,46 @@ public class ChamadoService : IChamadoService
             DataAbertura = DateTime.Now
         };
 
-        _context.Chamados.Add(novoChamado);
-        await _context.SaveChangesAsync();
-
+        await _chamadoRepository.AdicionarAsync(novoChamado);
         return novoChamado;
-
     }
+
     public async Task<Chamados> IniciarAsync(int id)
     {
-        var chamado = await _context.Chamados.FirstOrDefaultAsync(c => c.Id == id);
+        var chamado = await _chamadoRepository.ObterPorIdAsync(id);
         if (chamado is null)
-            throw new InvalidOperationException("Não existe chamados em aberto");
+            throw new KeyNotFoundException("Chamado não encontrado");
 
         chamado.Status = StatusChamado.EmAndamento;
-        await _context.SaveChangesAsync();
+        await _chamadoRepository.AtualizarAsync(chamado);
 
         return chamado;
     }
 
     public async Task<Chamados> FecharAsync(int id, string solucao)
     {
-        var chamado = await _context.Chamados.FirstOrDefaultAsync(c => c.Id == id);
+        var chamado = await _chamadoRepository.ObterPorIdAsync(id);
         if (chamado is null)
-            throw new InvalidOperationException("Não existe chamados em aberto");
+            throw new KeyNotFoundException("Chamado não encontrado");
 
         chamado.Solucao = solucao;
         chamado.DataFechamento = DateTime.Now;
         chamado.Status = StatusChamado.Finalizado;
-        await _context.SaveChangesAsync();
+        await _chamadoRepository.AtualizarAsync(chamado);
 
         return chamado;
     }
-     public async Task<Chamados> BuscarPorIdAsync(int id)
-    {
-        var chamado = await _context.Chamados
-            .Include(c => c.Categoria)
-            .Include(c => c.Interacoes)
-            .FirstOrDefaultAsync(c => c.Id == id);
 
+    public async Task<Interacao> AdicionarInteracaoAsync(int chamadoId, string autor, string mensagem)
+    {
+        var chamado = await _chamadoRepository.ObterPorIdAsync(chamadoId);
         if (chamado is null)
             throw new KeyNotFoundException("Chamado não encontrado");
 
-        return chamado;
-    }
-    public async Task<Interacao> AdicionarInteracaoAsync(int chamadoId, string autor, string mensagem)
-        {
-            var chamado = await _context.Chamados.FirstOrDefaultAsync(c => c.Id == chamadoId);
-            if (chamado is null)
-            throw new KeyNotFoundException("Chamado não encontrado");
-
-            if (chamado.Status == StatusChamado.Finalizado) 
+        if (chamado.Status == StatusChamado.Finalizado)
             throw new InvalidOperationException("Não é possível adicionar interações em um chamado fechado");
 
-            var interacao = new Interacao
+        var interacao = new Interacao
         {
             ChamadoId = chamadoId,
             Autor = autor,
@@ -87,27 +79,23 @@ public class ChamadoService : IChamadoService
             DataRegistro = DateTime.Now
         };
 
-        _context.Interacoes.Add(interacao);
-        await _context.SaveChangesAsync();
+        chamado.Interacoes.Add(interacao);
+        await _chamadoRepository.AtualizarAsync(chamado);
 
-    return interacao;
+        return interacao;
     }
-    public async Task<List<Chamados>> ListarAsync(StatusChamado? status, string prioridade, int? categoriaId)
+
+    public async Task<Chamados> BuscarPorIdAsync(int id)
     {
-        var query = _context.Chamados
-            .Include(c => c.Categoria)
-            .AsQueryable();
+        var chamado = await _chamadoRepository.ObterComDetalhesAsync(id);
+        if (chamado is null)
+            throw new KeyNotFoundException("Chamado não encontrado");
 
-        if (status.HasValue)
-            query = query.Where(c => c.Status == status.Value);
-
-        if (!string.IsNullOrWhiteSpace(prioridade))
-            query = query.Where(c => c.Prioridade == prioridade);
-
-        if (categoriaId.HasValue)
-            query = query.Where(c => c.CategoriaId == categoriaId.Value);
-
-        return await query.ToListAsync();
+        return chamado;
     }
 
+    public async Task<List<Chamados>> ListarAsync(StatusChamado? status, Prioridade? prioridade, int? categoriaId)
+    {
+        return await _chamadoRepository.ListarComFiltrosAsync(status, prioridade, categoriaId);
+    }
 }

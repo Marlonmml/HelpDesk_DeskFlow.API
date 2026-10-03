@@ -60,7 +60,7 @@ public class ChamadoController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Listar(
         [FromQuery] StatusChamado? status,
-        [FromQuery] string prioridade,
+        [FromQuery] Prioridade? prioridade,
         [FromQuery] int? categoriaId)
     {
         var chamados = await _chamadoService.ListarAsync(status, prioridade, categoriaId);

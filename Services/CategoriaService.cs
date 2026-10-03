@@ -1,6 +1,5 @@
-using DeskFlow.API.Data;
 using DeskFlow.API.Models.Entities;
-using Microsoft.EntityFrameworkCore;
+using DeskFlow.API.Repositories;
 
 namespace DeskFlow.API.Services;
 
@@ -9,11 +8,11 @@ public class CategoriaService : ICategoriaService
     private static readonly string[] CategoriasValidas =
         { "Hardware", "Software", "Redes", "Gestão de acesso" };
 
-    private readonly AppDbContext _context;
+    private readonly ICategoriaRepository _categoriaRepository;
 
-    public CategoriaService(AppDbContext context)
+    public CategoriaService(ICategoriaRepository categoriaRepository)
     {
-        _context = context;
+        _categoriaRepository = categoriaRepository;
     }
 
     public async Task<Categorias> CriarAsync(string nome)
@@ -23,21 +22,19 @@ public class CategoriaService : ICategoriaService
                 $"Categoria inválida. Opções aceitas: {string.Join(", ", CategoriasValidas)}");
 
         var categoria = new Categorias { Nome = nome };
-
-        _context.Categorias.Add(categoria);
-        await _context.SaveChangesAsync();
+        await _categoriaRepository.AdicionarAsync(categoria);
 
         return categoria;
     }
 
     public async Task<List<Categorias>> ListarAsync()
     {
-        return await _context.Categorias.ToListAsync();
+        return await _categoriaRepository.ListarAsync();
     }
 
     public async Task<Categorias> BuscarPorIdAsync(int id)
     {
-        var categoria = await _context.Categorias.FirstOrDefaultAsync(c => c.Id == id);
+        var categoria = await _categoriaRepository.ObterPorIdAsync(id);
         if (categoria is null)
             throw new KeyNotFoundException("Categoria não encontrada");
 
@@ -50,22 +47,19 @@ public class CategoriaService : ICategoriaService
             throw new InvalidOperationException(
                 $"Categoria inválida. Opções aceitas: {string.Join(", ", CategoriasValidas)}");
 
-        var categoria = await _context.Categorias.FirstOrDefaultAsync(c => c.Id == id);
+        var categoria = await _categoriaRepository.ObterPorIdAsync(id);
         if (categoria is null)
             throw new KeyNotFoundException("Categoria não encontrada");
 
         categoria.Nome = nome;
-        await _context.SaveChangesAsync();
+        await _categoriaRepository.AtualizarAsync(categoria);
 
         return categoria;
     }
 
     public async Task RemoverAsync(int id)
     {
-        var categoria = await _context.Categorias
-            .Include(c => c.Chamados)
-            .FirstOrDefaultAsync(c => c.Id == id);
-
+        var categoria = await _categoriaRepository.ObterComChamadosAsync(id);
         if (categoria is null)
             throw new KeyNotFoundException("Categoria não encontrada");
 
@@ -73,7 +67,6 @@ public class CategoriaService : ICategoriaService
             throw new InvalidOperationException(
                 "Categoria possui chamados associados e não pode ser removida");
 
-        _context.Categorias.Remove(categoria);
-        await _context.SaveChangesAsync();
+        await _categoriaRepository.RemoverAsync(categoria);
     }
 }
