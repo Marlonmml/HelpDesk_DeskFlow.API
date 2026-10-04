@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using DeskFlow.API.Data;
 using DeskFlow.API.Middlewares;
 using DeskFlow.API.Repositories;
@@ -18,17 +19,23 @@ builder.Services.AddControllers()
 
             return new BadRequestObjectResult(new { erro = string.Join("; ", mensagens) });
         };
+    })
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         sqlOptions => sqlOptions.EnableRetryOnFailure()));
 
-builder.Services.AddScoped<IChamadoRepository, ChamadoRepository>();
-builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
-
 builder.Services.AddScoped<IChamadoService, ChamadoService>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
+
+builder.Services.AddScoped<IChamadoRepository, ChamadoRepository>();
+builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
