@@ -19,8 +19,8 @@ public class AppDbContext : DbContext
             .HasMany(c => c.Chamados)
             .WithOne(ch => ch.Categoria)
             .HasForeignKey(ch => ch.CategoriaId);
-        
-        modelBuilder.Entity<Chamados>() 
+
+        modelBuilder.Entity<Chamados>()
             .HasMany(ch => ch.Interacoes)
             .WithOne(i => i.Chamado)
             .HasForeignKey(i => i.ChamadoId);

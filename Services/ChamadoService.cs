@@ -17,25 +17,25 @@ public class ChamadoService : IChamadoService
     }
 
     public async Task<Chamados> CriarAsync(ChamadoDto dto)
-{
-    var categoriaExiste = await _categoriaRepository.ObterPorIdAsync(dto.CategoriaId);
-    if (categoriaExiste is null)
-        throw new InvalidOperationException("Categoria informada não existe");
-
-    var novoChamado = new Chamados
     {
-        Titulo = dto.Titulo,
-        Descricao = dto.Descricao,
-        Prioridade = dto.Prioridade,
-        SolicitanteNome = dto.SolicitanteNome,
-        CategoriaId = dto.CategoriaId,
-        Status = StatusChamado.Aberto,
-        DataAbertura = DateTime.Now
-    };
+        var categoriaExiste = await _categoriaRepository.ObterPorIdAsync(dto.CategoriaId);
+        if (categoriaExiste is null)
+            throw new InvalidOperationException("Categoria informada não existe");
 
-    await _chamadoRepository.AdicionarAsync(novoChamado);
-    return novoChamado;
-}
+        var novoChamado = new Chamados
+        {
+            Titulo = dto.Titulo,
+            Descricao = dto.Descricao,
+            Prioridade = dto.Prioridade,
+            SolicitanteNome = dto.SolicitanteNome,
+            CategoriaId = dto.CategoriaId,
+            Status = StatusChamado.Aberto,
+            DataAbertura = DateTime.Now
+        };
+
+        await _chamadoRepository.AdicionarAsync(novoChamado);
+        return novoChamado;
+    }
 
     public async Task<Chamados> IniciarAsync(int id)
     {
@@ -50,18 +50,18 @@ public class ChamadoService : IChamadoService
     }
 
     public async Task<Chamados> EncerrarAsync(int id, string solucao)
-{
-    var chamado = await _chamadoRepository.ObterPorIdAsync(id);
-    if (chamado is null)
-        throw new KeyNotFoundException("Chamado não encontrado");
+    {
+        var chamado = await _chamadoRepository.ObterPorIdAsync(id);
+        if (chamado is null)
+            throw new KeyNotFoundException("Chamado não encontrado");
 
-    chamado.Solucao = solucao;
-    chamado.DataFechamento = DateTime.Now;
-    chamado.Status = StatusChamado.Fechado; // lembrando do ajuste Finalizado → Fechado
-    await _chamadoRepository.AtualizarAsync(chamado);
+        chamado.Solucao = solucao;
+        chamado.DataFechamento = DateTime.Now;
+        chamado.Status = StatusChamado.Fechado; // lembrando do ajuste Finalizado → Fechado
+        await _chamadoRepository.AtualizarAsync(chamado);
 
-    return chamado;
-}
+        return chamado;
+    }
 
     public async Task<Interacao> AdicionarInteracaoAsync(int chamadoId, string autor, string mensagem)
     {

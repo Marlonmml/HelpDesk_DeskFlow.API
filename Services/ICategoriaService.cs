@@ -8,6 +8,6 @@ public interface ICategoriaService
     Task<List<Categorias>> ListarAsync();
     Task<Categorias> BuscarPorIdAsync(int id);
     Task<Categorias> AtualizarAsync(int id, string nome);
-    
+
     Task RemoverAsync(int id);
 }

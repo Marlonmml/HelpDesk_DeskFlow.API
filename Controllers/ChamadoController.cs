@@ -18,7 +18,7 @@ public class ChamadoController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Criar([FromBody] ChamadoDto dto)   
+    public async Task<IActionResult> Criar([FromBody] ChamadoDto dto)
     {
         var novoChamado = await _chamadoService.CriarAsync(dto);
         return CreatedAtAction(nameof(BuscarPorId), new { id = novoChamado.Id }, novoChamado);
@@ -35,12 +35,32 @@ public class ChamadoController : ControllerBase
     }
 
     [HttpGet("{id}")]
+
     public async Task<IActionResult> BuscarPorId(int id)
     {
         var chamado = await _chamadoService.BuscarPorIdAsync(id);
-        return Ok(chamado);
-    }
 
+        var resposta = new ChamadoResponseDto
+        {
+            Id = chamado.Id,
+            Titulo = chamado.Titulo,
+            Descricao = chamado.Descricao,
+            Prioridade = chamado.Prioridade,
+            Status = chamado.Status,
+            SolicitanteNome = chamado.SolicitanteNome,
+            DataAbertura = chamado.DataAbertura,
+            DataFechamento = chamado.DataFechamento,
+            Solucao = chamado.Solucao,
+            CategoriaNome = chamado.Categoria?.Nome,
+            Interacoes = chamado.Interacoes.Select(i => new InteracaoDto
+            {
+                Autor = i.Autor,
+                Mensagem = i.Mensagem
+            }).ToList()
+        };
+
+        return Ok(resposta);
+    }
     [HttpPost("{id}/iniciar")]
     public async Task<IActionResult> Iniciar(int id)
     {
