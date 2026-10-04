@@ -18,10 +18,10 @@ public class ChamadoController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Criar([FromBody] Chamados chamado)
+    public async Task<IActionResult> Criar([FromBody] ChamadoDto dto)   
     {
-        var novoChamado = await _chamadoService.CriarAsync(chamado);
-        return CreatedAtAction(nameof(BuscarPorId), new { id = novoChamado.Id }, novoChamado); // 201
+        var novoChamado = await _chamadoService.CriarAsync(dto);
+        return CreatedAtAction(nameof(BuscarPorId), new { id = novoChamado.Id }, novoChamado);
     }
 
     [HttpGet]

@@ -1,6 +1,7 @@
 using DeskFlow.API.Models;
 using DeskFlow.API.Models.Entities;
 using DeskFlow.API.Repositories;
+using DeskFlow.API.Dtos;
 
 namespace DeskFlow.API.Services;
 
@@ -15,26 +16,26 @@ public class ChamadoService : IChamadoService
         _categoriaRepository = categoriaRepository;
     }
 
-    public async Task<Chamados> CriarAsync(Chamados chamado)
+    public async Task<Chamados> CriarAsync(ChamadoDto dto)
+{
+    var categoriaExiste = await _categoriaRepository.ObterPorIdAsync(dto.CategoriaId);
+    if (categoriaExiste is null)
+        throw new InvalidOperationException("Categoria informada não existe");
+
+    var novoChamado = new Chamados
     {
-        var categoriaExiste = await _categoriaRepository.ObterPorIdAsync(chamado.CategoriaId);
-        if (categoriaExiste is null)
-            throw new InvalidOperationException("Categoria informada não existe");
+        Titulo = dto.Titulo,
+        Descricao = dto.Descricao,
+        Prioridade = dto.Prioridade,
+        SolicitanteNome = dto.SolicitanteNome,
+        CategoriaId = dto.CategoriaId,
+        Status = StatusChamado.Aberto,
+        DataAbertura = DateTime.Now
+    };
 
-        var novoChamado = new Chamados
-        {
-            Titulo = chamado.Titulo,
-            Descricao = chamado.Descricao,
-            Prioridade = chamado.Prioridade,
-            SolicitanteNome = chamado.SolicitanteNome,
-            CategoriaId = chamado.CategoriaId,
-            Status = StatusChamado.Aberto,
-            DataAbertura = DateTime.Now
-        };
-
-        await _chamadoRepository.AdicionarAsync(novoChamado);
-        return novoChamado;
-    }
+    await _chamadoRepository.AdicionarAsync(novoChamado);
+    return novoChamado;
+}
 
     public async Task<Chamados> IniciarAsync(int id)
     {

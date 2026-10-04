@@ -1,11 +1,12 @@
 using DeskFlow.API.Models.Entities;
 using DeskFlow.API.Models;
+using DeskFlow.API.Dtos;
 
 namespace DeskFlow.API.Services;
 
 public interface IChamadoService
 {
-    Task<Chamados> CriarAsync(Chamados chamado);
+    Task<Chamados> CriarAsync(ChamadoDto dto);
     Task<Chamados> IniciarAsync(int id);
     Task<Chamados> EncerrarAsync(int id, string solucao);
     Task<Interacao> AdicionarInteracaoAsync(int chamadoId, string autor, string mensagem);
