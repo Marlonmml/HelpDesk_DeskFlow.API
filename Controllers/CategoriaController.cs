@@ -19,15 +19,8 @@ public class CategoriaController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Criar([FromBody] CategoriaDto dto)
     {
-        try
-        {
-            var categoria = await _categoriaService.CriarAsync(dto.Nome);
-            return Ok(categoria);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(ex.Message);
-        }
+        var categoria = await _categoriaService.CriarAsync(dto.Nome);
+        return CreatedAtAction(nameof(BuscarPorId), new { id = categoria.Id }, categoria); // 201
     }
 
     [HttpGet]

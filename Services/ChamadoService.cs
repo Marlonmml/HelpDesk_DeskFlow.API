@@ -48,19 +48,19 @@ public class ChamadoService : IChamadoService
         return chamado;
     }
 
-    public async Task<Chamados> FecharAsync(int id, string solucao)
-    {
-        var chamado = await _chamadoRepository.ObterPorIdAsync(id);
-        if (chamado is null)
-            throw new KeyNotFoundException("Chamado não encontrado");
+    public async Task<Chamados> EncerrarAsync(int id, string solucao)
+{
+    var chamado = await _chamadoRepository.ObterPorIdAsync(id);
+    if (chamado is null)
+        throw new KeyNotFoundException("Chamado não encontrado");
 
-        chamado.Solucao = solucao;
-        chamado.DataFechamento = DateTime.Now;
-        chamado.Status = StatusChamado.Finalizado;
-        await _chamadoRepository.AtualizarAsync(chamado);
+    chamado.Solucao = solucao;
+    chamado.DataFechamento = DateTime.Now;
+    chamado.Status = StatusChamado.Fechado; // lembrando do ajuste Finalizado → Fechado
+    await _chamadoRepository.AtualizarAsync(chamado);
 
-        return chamado;
-    }
+    return chamado;
+}
 
     public async Task<Interacao> AdicionarInteracaoAsync(int chamadoId, string autor, string mensagem)
     {
@@ -68,7 +68,7 @@ public class ChamadoService : IChamadoService
         if (chamado is null)
             throw new KeyNotFoundException("Chamado não encontrado");
 
-        if (chamado.Status == StatusChamado.Finalizado)
+        if (chamado.Status == StatusChamado.Fechado)
             throw new InvalidOperationException("Não é possível adicionar interações em um chamado fechado");
 
         var interacao = new Interacao
