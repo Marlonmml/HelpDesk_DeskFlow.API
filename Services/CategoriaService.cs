@@ -21,6 +21,12 @@ public class CategoriaService : ICategoriaService
             throw new InvalidOperationException(
                 $"Categoria inválida. Opções aceitas: {string.Join(", ", CategoriasValidas)}");
 
+        var categorias = await _categoriaRepository.ListarAsync();
+        var jaExiste = categorias.Any(c => c.Nome.Equals(nome, StringComparison.OrdinalIgnoreCase));
+
+        if (jaExiste)
+            throw new InvalidOperationException($"A categoria '{nome}' já está cadastrada");
+
         var categoria = new Categorias { Nome = nome };
         await _categoriaRepository.AdicionarAsync(categoria);
 
@@ -50,6 +56,13 @@ public class CategoriaService : ICategoriaService
         var categoria = await _categoriaRepository.ObterPorIdAsync(id);
         if (categoria is null)
             throw new KeyNotFoundException("Categoria não encontrada");
+
+        var categorias = await _categoriaRepository.ListarAsync();
+        var jaExisteEmOutra = categorias.Any(c =>
+            c.Id != id && c.Nome.Equals(nome, StringComparison.OrdinalIgnoreCase));
+
+        if (jaExisteEmOutra)
+            throw new InvalidOperationException($"A categoria '{nome}' já está cadastrada");
 
         categoria.Nome = nome;
         await _categoriaRepository.AtualizarAsync(categoria);
